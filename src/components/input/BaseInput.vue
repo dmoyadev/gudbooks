@@ -75,6 +75,7 @@ watch(() => props.hasError, (value) => {
 				<span
 					v-if="$slots.append
 						|| loading
+						|| (isClearable && !!modelValue)
 						|| [InputType.SEARCH, InputType.PASSWORD].includes(inputType)"
 					class="append"
 				>
@@ -187,7 +188,7 @@ div {
 					&:before {
 						content: '';
 						position: absolute;
-						background: var(--color-secondary);
+						background: none;
 						top: 50%;
 						transform: translateY(-50%);
 						width: 60px;
@@ -201,6 +202,7 @@ div {
 					input, textarea {
 						border-radius: 0 4px 4px 0;
 						padding-left: 22px;
+						border-left: none;
 					}
 
 					& ~ .label {
@@ -216,6 +218,7 @@ div {
 					input, textarea {
 						border-radius: 4px 0 0 4px;
 						padding-right: 22px;
+						border-right: none;
 					}
 
 					& .append {

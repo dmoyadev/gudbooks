@@ -28,9 +28,34 @@ export const routes: Array<RouteRecordRaw> = [
 
 	{
 		path: '/',
-		name: 'Home',
-		component: async () => import('@/modules/app/pages/HomePage.vue'),
-		meta: { title: '' },
+		name: 'Tabs',
+		component: async () => import('@/layouts/TabsLayout.vue'),
+		children: [
+			{
+				path: '/',
+				name: 'Library',
+				component: async () => import('@/modules/tabs/pages/HomePage.vue'),
+				meta: { title: '' },
+			},
+			{
+				path: '/shelves',
+				name: 'Estantes',
+				component: async () => import('@/modules/tabs/pages/ShelvesPage.vue'),
+				meta: { title: 'Estantes' },
+			},
+			{
+				path: '/search',
+				name: 'Buscar',
+				component: async () => import('@/modules/tabs/pages/SearchPage.vue'),
+				meta: { title: 'Buscar' },
+			},
+			{
+				path: '/profile',
+				name: 'Perfil',
+				component: async () => import('@/modules/tabs/pages/ProfilePage.vue'),
+				meta: { title: 'Perfil' },
+			},
+		],
 	},
 
 	{

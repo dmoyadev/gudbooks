@@ -1,24 +1,38 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import type { Volume } from '@/modules/volumes/models/Volume.ts';
 import { getCover } from '@/modules/volumes/helpers.ts';
 
 const props = withDefaults(defineProps<{
 	book: Volume;
-	size?: number;
+	width?: number | string;
 }>(), {
-	size: 400,
+	width: '200px',
 });
 
+const rotation = ref(0);
 const bookCover = computed<string>(() => getCover(props.book.volumeInfo.imageLinks));
+const $book = ref<HTMLElement>();
+const height = ref(0);
+onMounted(() => {
+	if (!$book.value) {
+		return;
+	}
+
+	height.value = $book.value.clientWidth * 1.55;
+});
 </script>
 
 <template>
 	<article
+		ref="$book"
 		:style="{
-			'--book-height': `${size}px`,
+			'--book-height': `${height}px`,
+			'--book-width': isNaN(+width) ? width : (`${width}px`),
 			'--book-cover': `url(${bookCover})`,
+			'--book-rotation': `${rotation}deg`,
 		}"
+		@click="rotation = rotation === 0 ? 360 : 0"
 	>
 		<div class="front">
 			<img
@@ -68,25 +82,21 @@ const bookCover = computed<string>(() => getCover(props.book.volumeInfo.imageLin
 
 <style scoped lang="scss">
 article {
-	--book-width: calc(var(--book-height) * 0.66);
 	--book-depth: 40px;
 	--book-color: rgb(0, 0, 0, 1);
 
+	min-height: var(--book-height);
 	height: var(--book-height);
 	width: var(--book-width);
 	position: relative;
 	transform-style: preserve-3d;
-	transform: rotate3d(0, 1, 0, 0);
+	transform: rotate3d(0, 1, 0, var(--book-rotation));
 	transition: transform 3s;
-
-	&:hover {
-		transform: rotate3d(0, 1, 0, 360deg);
-	}
 
 	.front {
 		position: absolute;
 		height: var(--book-height);
-		width: var(--book-width);
+		width: 100%;
 		transform-style: preserve-3d;
 		transform-origin: 0 50%;
 		transition: transform .5s;
@@ -132,7 +142,7 @@ article {
 		background: var(--book-color);
 		height: var(--book-height);
 		max-height: var(--book-height);
-		width: var(--book-width);
+		width: 100%;
 		overflow: hidden;
 
 		img {
@@ -169,9 +179,9 @@ article {
 	.pages {
 		position: absolute;
 		top: 4px;
-		left: calc(var(--book-width) - 8px);
+		left: calc(100% - 8px);
 		height: calc(100% - 8px);
-		width: calc(var(--book-depth) - 1px);
+		width: calc(var(--book-depth) - 2px);
 		background: white;
 		transform: rotate3d(0, 1, 0, 90deg) translate3d(0, 0, calc(var(--book-depth) - 60px));
 	}
@@ -205,6 +215,7 @@ article {
 			align-items: center;
 			justify-content: flex-end;
 			gap: 8px;
+			font-size: var(--font-size-legal);
 			transform-origin: 0 0;
 			transform: rotate(90deg) translateY(-40px);
 			overflow: hidden;
