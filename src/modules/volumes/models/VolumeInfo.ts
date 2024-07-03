@@ -4,10 +4,11 @@ export interface VolumeInfo {
 	publisher?: string;
 	publishedDate: string;
 	description?: string;
+	dimensions?: Dimensions;
 	industryIdentifiers: IndustryIdentifier[];
 	readingModes: ReadingModes;
 	pageCount?: number;
-	printedPageCount: number;
+	printedPageCount?: number;
 	printType: string;
 	categories?: string[];
 	averageRating?: number;
@@ -22,6 +23,11 @@ export interface VolumeInfo {
 	infoLink: string;
 	canonicalVolumeLink: string;
 	subtitle?: string;
+}
+
+interface Dimensions {
+	height: string;
+	width: string;
 }
 
 interface IndustryIdentifier {
