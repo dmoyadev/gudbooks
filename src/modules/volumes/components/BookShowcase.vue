@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { capitalizeAll } from '../../../utils/helpers.ts';
 import type { Volume } from '@/modules/volumes/models/Volume.ts';
 import type { CoverSize } from '@/modules/volumes/helpers.ts';
 import { getCover } from '@/modules/volumes/helpers.ts';
 
 const props = withDefaults(defineProps<{
 	book: Volume;
+	doAnimationOnLoad?: boolean;
 	coverSize?: CoverSize;
 	width?: number | string;
 }>(), {
 	width: '200px',
 });
 
-const rotation = ref(0);
 const bookCover = computed<string>(() => getCover(props.book.volumeInfo.imageLinks, props.coverSize));
+const bookTitle = computed<string>(() => capitalizeAll(props.book.volumeInfo.title));
+const bookAuthors = computed<string>(() => props.book.volumeInfo.authors?.join(' • ') || '');
+
+const rotation = ref(0);
 const $book = ref<HTMLElement>();
 const height = ref(0);
 onMounted(() => {
@@ -22,7 +27,57 @@ onMounted(() => {
 	}
 
 	height.value = $book.value.clientWidth * 1.55;
+	if (props.doAnimationOnLoad) {
+		rotation.value = -385;
+	}
 });
+
+// Calculate rotation on drag
+const isDragging = ref(false);
+const previousTouch = ref<Touch>();
+
+function handleStartDrag() {
+	isDragging.value = true;
+	$book.value!.style.transitionDuration = '0s';
+}
+
+function handleEndDrag() {
+	isDragging.value = false;
+	previousTouch.value = undefined;
+	$book.value!.style.transitionDuration = '2s';
+}
+
+function handleMouseMove(e: MouseEvent) {
+	// This event should trigger only when isDragging === true
+	if (!isDragging.value) {
+		return;
+	}
+
+	// If the user releases the mouse button, stop dragging
+	// This is useful when the user releases the mouse button outside the window
+	if (e.buttons !== 1) {
+		isDragging.value = false;
+		return;
+	}
+
+	rotation.value += e.movementX;
+}
+
+function handleTouchMove(e: TouchEvent) {
+	// Handle dragging
+	if (e.touches.length === 1) {
+		const touch = e.touches[0];
+		if (!previousTouch.value) {
+			previousTouch.value = touch;
+			return;
+		}
+
+		rotation.value += touch.pageX - previousTouch.value?.pageX;
+
+		// Update the previous touch point after calculating the offset
+		previousTouch.value = touch;
+	}
+}
 </script>
 
 <template>
@@ -35,47 +90,65 @@ onMounted(() => {
 			'--book-rotation': `${rotation}deg`,
 		}"
 		@click="rotation = rotation === 0 ? 360 : 0"
+		@mousedown.passive="handleStartDrag()"
+		@touchstart.passive="handleStartDrag()"
+		@mouseup.passive="handleEndDrag()"
+		@touchend.passive="handleEndDrag()"
+		@mousemove.passive="handleMouseMove($event)"
+		@touchmove.passive="handleTouchMove($event)"
 	>
 		<div class="front">
 			<img
 				v-if="bookCover"
 				:src="bookCover"
-				:alt="book.volumeInfo.title"
+				:alt="bookTitle"
 			>
 
 			<h2 v-else>
-				<span>{{ book.volumeInfo.title }}</span>
+				<span>{{ bookTitle }}</span>
 				<span
-					v-if="book.volumeInfo.authors?.length"
+					v-if="bookAuthors?.length"
 					class="authors"
 				>
-					{{ book.volumeInfo.authors?.join('•') }}
+					{{ bookAuthors }}
 				</span>
 			</h2>
 		</div>
 
 		<div class="back">
 			<img
+				v-if="bookCover"
 				:src="bookCover"
-				:alt="book.volumeInfo.title"
+				:alt="bookTitle"
 			>
+
+			<h2>
+				<span>{{ bookTitle }}</span>
+				<span
+					v-if="bookAuthors?.length"
+					class="authors"
+				>
+					{{ bookAuthors }}
+				</span>
+			</h2>
 		</div>
 
 		<div class="pages" />
 
 		<div class="spine">
 			<img
+				v-if="bookCover"
 				:src="bookCover"
-				:alt="book.volumeInfo.title"
+				:alt="bookTitle"
 			>
 
 			<h2>
-				<span>{{ book.volumeInfo.title }}</span>
+				<span>{{ bookTitle }}</span>
 				<span
-					v-if="book.volumeInfo.authors?.length"
+					v-if="bookAuthors?.length"
 					class="authors"
 				>
-					{{ book.volumeInfo.authors?.join('•') }}
+					{{ bookAuthors }}
 				</span>
 			</h2>
 		</div>
@@ -93,20 +166,20 @@ article {
 	position: relative;
 	transform-style: preserve-3d;
 	transform: rotate3d(0, 1, 0, var(--book-rotation));
-	transition: transform 3s;
+	transition: transform 2s;
 
-	.front {
+	.front,
+	.back,
+	.spine,
+	.pages {
 		position: absolute;
 		height: var(--book-height);
+		max-height: var(--book-height);
 		width: 100%;
-		transform-style: preserve-3d;
-		transform-origin: 0 50%;
-		transition: transform .5s;
-		transform: translate3d(0, 0, 20px);
-		z-index: 10;
-		border-radius: 0 3px 3px 0;
-		box-shadow: inset 4px 0 10px rgba(0, 0, 0, 0.1);
 		background: var(--book-color);
+		box-shadow: 0 0 10px rgba(0, 0, 0, 1);
+		border-radius: 0 3px 3px 0;
+		overflow: hidden;
 
 		img {
 			height: 100%;
@@ -114,6 +187,48 @@ article {
 			max-height: 100%;
 			object-fit: cover;
 			border-radius: 0 3px 3px 0;
+		}
+	}
+
+	.back,
+	.spine {
+		img {
+			filter: blur(15px);
+			z-index: -1;
+			position: absolute;
+			inset: 0;
+		}
+	}
+
+	.front {
+		transform-origin: 0 50%;
+		transform: translate3d(0, 0, 20px);
+
+		&:after {
+			left: 8px;
+		}
+	}
+
+	.back {
+		transform: rotate3d(0, 1, 0, -180deg) translate3d(0, 0, 19px);
+		border-radius: 3px 0 0 3px;
+
+		&:after {
+			right: 8px;
+		}
+	}
+
+	/* Spìne mark next to the spine, to give a bookish feeling */
+	.front,
+	.back {
+		&:after {
+			content: '';
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			width: 4px;
+			background: rgba(0, 0, 0, 0.06);
+			box-shadow: 1px 0 3px rgba(255, 255, 255, 0.1);
 		}
 
 		h2 {
@@ -130,84 +245,22 @@ article {
 				font-weight: var(--font-weight-thin);
 			}
 		}
-
-		&:after {
-			left: 8px;
-		}
-	}
-
-	.back {
-		position: absolute;
-		transform: rotate3d(0, 1, 0, -180deg) translate3d(0, 0, 19px);
-		box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.3);
-		border-radius: 3px 0 0 3px;
-		background: var(--book-color);
-		height: var(--book-height);
-		max-height: var(--book-height);
-		width: 100%;
-		overflow: hidden;
-
-		img {
-			filter: blur(15px);
-			z-index: -1;
-			position: absolute;
-			inset: 0;
-			height: 100%;
-			max-width: 100%;
-			max-height: 100%;
-			object-fit: cover;
-			border-radius: 0 3px 3px 0;
-		}
-
-		&:after {
-			right: 8px;
-		}
-	}
-
-	/* Book mark next to the spine */
-	.front,
-	.back {
-		&:after {
-			content: '';
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			width: 4px;
-			background: rgba(0, 0, 0, 0.06);
-			box-shadow: 1px 0 3px rgba(255, 255, 255, 0.1);
-		}
 	}
 
 	.pages {
-		position: absolute;
 		top: 4px;
 		left: calc(100% - 8px);
 		height: calc(100% - 8px);
 		width: calc(var(--book-depth) - 2px);
-		background: white;
+		background: var(--color-secondary-accent);
 		transform: rotate3d(0, 1, 0, 90deg) translate3d(0, 0, calc(var(--book-depth) - 60px));
 	}
 
 	.spine {
-		position: absolute;
 		left: -20px;
 		height: 100%;
 		width: calc(var(--book-depth) - 1px);
-		background: var(--book-color);
 		transform: rotate3d(0, 1, 0, -90deg);
-		overflow: hidden;
-
-		img {
-			filter: blur(15px);
-			z-index: -1;
-			position: absolute;
-			inset: 0;
-			height: 100%;
-			max-width: 100%;
-			max-height: 100%;
-			object-fit: cover;
-			border-radius: 0 3px 3px 0;
-		}
 
 		h2 {
 			padding: 8px 16px;
@@ -226,6 +279,11 @@ article {
 				white-space: nowrap;
 				text-overflow: ellipsis;
 				overflow: hidden;
+
+				&.authors {
+					font-size: 8px;
+					text-transform: uppercase;
+				}
 			}
 		}
 	}

@@ -1,11 +1,11 @@
 export interface VolumeInfo {
 	title: string;
-	authors: string[];
+	authors?: string[];
 	publisher?: string;
-	publishedDate: string;
+	publishedDate?: string;
 	description?: string;
 	dimensions?: Dimensions;
-	industryIdentifiers: IndustryIdentifier[];
+	industryIdentifiers?: IndustryIdentifier[];
 	readingModes: ReadingModes;
 	pageCount?: number;
 	printedPageCount?: number;
@@ -17,6 +17,7 @@ export interface VolumeInfo {
 	allowAnonLogging: boolean;
 	contentVersion: string;
 	panelizationSummary?: PanelizationSummary;
+	comicsContent?: boolean;
 	imageLinks?: ImageLinks;
 	language: string;
 	previewLink: string;

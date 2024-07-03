@@ -9,7 +9,7 @@ export interface Volume {
 	etag: string;
 	selfLink: string;
 	volumeInfo: VolumeInfo;
-	layerInfo: VolumeLayerInfo;
+	layerInfo?: VolumeLayerInfo;
 	saleInfo: VolumeSaleInfo;
 	accessInfo: VolumeAccessInfo;
 }

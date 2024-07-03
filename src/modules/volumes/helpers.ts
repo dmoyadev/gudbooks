@@ -14,6 +14,7 @@ export function getCover(images?: ImageLinks, size: CoverSize = CoverSize.M): st
 
 	const coverURL = images[size] || images.thumbnail || images.smallThumbnail || '';
 	return coverURL
+		.replace('http://', 'https://')
 		.replace('&edge=curl', '')
-		.replace('source=gbs_api', '');
+		.replace('&source=gbs_api', '');
 }

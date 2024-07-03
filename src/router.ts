@@ -1,5 +1,6 @@
 import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router';
 import { createRouter, createWebHistory } from 'vue-router';
+import { startViewTransition } from 'vue-view-transitions';
 import { useAuth } from '@/modules/auth/composables/useAuth.ts';
 
 export const routes: Array<RouteRecordRaw> = [
@@ -95,6 +96,11 @@ router.beforeEach(async (to) => {
 	setDocumentTitle(to);
 	const redirection = await checkAuth(to);
 	return redirection || true;
+});
+
+router.beforeResolve(async () => {
+	const viewTransition = startViewTransition();
+	await viewTransition.captured;
 });
 
 /**

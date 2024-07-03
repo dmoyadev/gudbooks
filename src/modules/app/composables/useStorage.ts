@@ -7,13 +7,14 @@ import { ref, watch } from 'vue';
  * @example
  * const data = useStorage<number>('current-page', 1);
  *
+ * @template T
  * @param {string} key - The key to store the data under
- * @param {any} data - The data to store
+ * @param {T | undefined} defaultData - The data to store
  *
- * @returns {Ref<any>} - The data stored in local storage
+ * @returns {Ref<T>} - The data stored in local storage
  */
-export function useStorage<T>(key: string, data: T | undefined = undefined): Ref<T | undefined> {
-	const refData = ref(data) as Ref<T | undefined>;
+export function useStorage<T>(key: string, defaultData?: T): Ref<T> {
+	const refData = ref(defaultData) as Ref<T>;
 
 	// Start by reading the data from local storage
 	const storedData = JSON.parse(localStorage.getItem(key) ?? 'null') ?? undefined;

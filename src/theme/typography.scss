@@ -1,22 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap');
+
 :root {
 	--font-weight-black: 700;
 	--font-weight-bold: 500;
 	--font-weight-regular: 400;
 	--font-weight-thin: 300;
 
-	--font-size-title: 24px;
-	--font-size-big: 18px;
+	--font-size-title: 28px;
+	--font-size-big: 22px;
 	--font-size-body: 16px;
 	--font-size-small: 14px;
 	--font-size-legal: 12px;
 
-	font-family: system-ui, BlinkMacSystemFont;
+	font-family: "Inter Tight", monospace;
 	font-size: var(--font-size-body);
 	font-weight: var(--font-weight-regular);
 	color: var(--color-gray-10);
 
 	h1, h2, h3, h4, h5, h6 {
-		font-family: sans-serif, system-ui, BlinkMacSystemFont;
+		font-family: 'Playfair Display', serif;
 		font-weight: var(--font-weight-black);
 	}
 
