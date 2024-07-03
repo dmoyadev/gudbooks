@@ -14,8 +14,12 @@ import './theme/skeleton.scss';
 /* App core dependencies */
 import router from './router';
 
+/* View page transitions */
+import { ViewTransitionsPlugin } from 'vue-view-transitions';
+
 const app = createApp(App as Component);
 app.use(router);
+app.use(ViewTransitionsPlugin());
 
 /* Create the router and mount the app */
 router.isReady()

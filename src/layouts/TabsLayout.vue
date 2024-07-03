@@ -31,7 +31,7 @@ const tabs = [
 <template>
 	<RouterView />
 
-	<nav>
+	<nav v-view-transition-name="`tabs`">
 		<BaseButton
 			v-for="(tab, index) in tabs"
 			:key="index"
@@ -49,6 +49,10 @@ const tabs = [
 <style>
 :root {
 	--tab-height: 64px;
+}
+
+::view-transition-group(tabs) {
+	z-index: 100;
 }
 </style>
 
