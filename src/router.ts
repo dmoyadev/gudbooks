@@ -59,6 +59,13 @@ export const routes: Array<RouteRecordRaw> = [
 	},
 
 	{
+		path: '/books/:id',
+		name: 'Book',
+		component: async () => import('@/modules/volumes/pages/BookPage.vue'),
+		meta: { title: 'Libro' },
+	},
+
+	{
 		path: '/showcase',
 		name: 'Component Showcase',
 		component: async () => import('@/showcase/ShowcasePage.vue'),

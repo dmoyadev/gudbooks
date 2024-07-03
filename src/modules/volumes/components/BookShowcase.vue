@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import type { Volume } from '@/modules/volumes/models/Volume.ts';
+import type { CoverSize } from '@/modules/volumes/helpers.ts';
 import { getCover } from '@/modules/volumes/helpers.ts';
 
 const props = withDefaults(defineProps<{
 	book: Volume;
+	coverSize?: CoverSize;
 	width?: number | string;
 }>(), {
 	width: '200px',
 });
 
 const rotation = ref(0);
-const bookCover = computed<string>(() => getCover(props.book.volumeInfo.imageLinks));
+const bookCover = computed<string>(() => getCover(props.book.volumeInfo.imageLinks, props.coverSize));
 const $book = ref<HTMLElement>();
 const height = ref(0);
 onMounted(() => {
