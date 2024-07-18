@@ -37,7 +37,7 @@ export function useGoogleBooksAPI() {
 			.catch(async (err: Error) => {
 				console.error('🔴 Something went wrong: ', err);
 				throw err;
-			});
+			}) as Promise<T>;
 	}
 
 	async function searchBooks(searchOptions: GoogleBooksSearchOptions): Promise<Volume[]> {
@@ -65,11 +65,17 @@ export function useGoogleBooksAPI() {
 
 		delete searchOptions.q;
 		const searchParams = Object.keys(searchOptions).length
-			? `&${new URLSearchParams(searchOptions as Record<string, string>)}`
+			? `&${String(new URLSearchParams(searchOptions as Record<string, string>))}`
 			: '';
 
 		return doCall<VolumesSearch>(`/volumes?q=${query}${searchParams}`)
-			.then((res: VolumesSearch) => res.items);
+			.then((res: VolumesSearch) => {
+				if (res.totalItems) {
+					return res.items;
+				}
+
+				return [];
+			});
 	}
 
 	async function getBook(id: string): Promise<Volume> {
