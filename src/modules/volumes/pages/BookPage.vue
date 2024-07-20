@@ -111,11 +111,6 @@ onBeforeRouteLeave(() => {
 
 			<!-- ✅ Data state -->
 			<template v-else>
-				<section class="title">
-					<h1>{{ bookTitle }}</h1>
-					<h2>{{ bookAuthors }}</h2>
-				</section>
-
 				<section class="book-info">
 					<BookShowcase
 						:style="{ '--view-transition-name': applyViewTransitionName ? `book-${book.id}` : 'none' }"
@@ -144,7 +139,10 @@ onBeforeRouteLeave(() => {
 					</aside>
 				</section>
 
-				<h2>{{ bookPublisher }}</h2>
+				<section class="title">
+					<h1>{{ bookTitle }}</h1>
+					<h2>{{ bookAuthors }} - {{ bookPublisher }}</h2>
+				</section>
 
 				<section class="metadata">
 					<div class="isbn">
@@ -175,7 +173,7 @@ onBeforeRouteLeave(() => {
 
 <style scoped lang="scss">
 header {
-	padding: 16px 16px 0 16px;
+	padding: 16px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;

@@ -240,9 +240,27 @@ article {
 			height: 100%;
 			text-align: center;
 
+			span {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: initial;
+				display: -webkit-box;
+				-webkit-line-clamp: 4;
+				line-clamp: 4;
+				-webkit-box-orient: vertical;
+			}
+
 			.authors {
 				font-size: var(--font-size-legal);
 				font-weight: var(--font-weight-thin);
+
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: initial;
+				display: -webkit-box;
+				-webkit-line-clamp: 3;
+				line-clamp: 3;
+				-webkit-box-orient: vertical;
 			}
 		}
 	}
@@ -253,6 +271,7 @@ article {
 		height: calc(100% - 8px);
 		width: calc(var(--book-depth) - 2px);
 		background: var(--color-secondary-accent);
+		box-shadow: none;
 		transform: rotate3d(0, 1, 0, 90deg) translate3d(0, 0, calc(var(--book-depth) - 60px));
 	}
 

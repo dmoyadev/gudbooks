@@ -11,12 +11,18 @@ import { ButtonForm } from '@/components/button/BaseButton.types.ts';
 import BookShowcase from '@/modules/volumes/components/BookShowcase.vue';
 import { useVolumeStore } from '@/modules/volumes/composables/useVolumeStore.ts';
 
-const { searchQuery, searchResults, currentVolume } = useVolumeStore();
+const {
+	searchQuery,
+	searchResults,
+	currentVolume,
+	searchScrollOffset,
+} = useVolumeStore();
 
 const searched = ref(false);
 const searching = ref(false);
 const error = ref();
 async function search() {
+	searchScrollOffset.value = 0;
 	if (!searchQuery.value) {
 		return;
 	}
@@ -41,16 +47,23 @@ const isFiltersModalOpen = ref(false);
 
 const applyViewTransitionName = ref(false);
 const router = useRouter();
-async function openBook(book: Volume) {
+function openBook(book: Volume) {
 	applyViewTransitionName.value = true;
-	await nextTick();
 	currentVolume.value = book;
-	await router.push(`/books/${book.id}`);
+
+	const $app = document.querySelector('#app') as HTMLElement;
+	searchScrollOffset.value = $app.scrollTop;
+	$app.scroll({ top: 0 });
+
+	router.push(`/books/${book.id}`);
 }
 
 onMounted(async () => {
 	applyViewTransitionName.value = true;
 	setTimeout(() => applyViewTransitionName.value = false, 0);
+	await nextTick();
+	const $app = document.querySelector('#app') as HTMLElement;
+	$app.scroll({ top: searchScrollOffset.value });
 });
 </script>
 
@@ -113,9 +126,12 @@ onMounted(async () => {
 						@click="openBook(book)"
 					/>
 
-					<span class="isbn">
-						<BaseIcon icon="fluent:number-symbol-16-filled" />
-						{{ book.volumeInfo.industryIdentifiers?.find(({ type }) => type === 'ISBN_13')?.identifier || 'No disponible' }}
+					<span class="title">
+						{{ book.volumeInfo.title || '???' }}
+					</span>
+
+					<span class="author">
+						{{ book.volumeInfo.authors?.join(' • ') || '???' }}
 					</span>
 				</div>
 			</section>
@@ -143,14 +159,14 @@ main {
 	}
 
 	section {
-		padding: 0 16px 16px;
+		padding: 0 16px calc(var(--tab-height) + 16px);
 		display: flex;
 		justify-content: space-around;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: 32px 16px;
 
 		.book-container {
-			width: calc(33% - 6px);
+			width: calc(33% - 10px);
 			display: flex;
 			flex-direction: column;
 			gap: 4px;
@@ -159,10 +175,18 @@ main {
 				view-transition-name: var(--view-transition-name);
 			}
 
-			.isbn {
-				display: flex;
-				align-items: center;
-				gap: 4px;
+			.title {
+				font-size: var(--font-size-legal);
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: initial;
+				display: -webkit-box;
+				-webkit-line-clamp: 2;
+				line-clamp: 2;
+				-webkit-box-orient: vertical;
+			}
+
+			.author {
 				font-size: 10px;
 				color: var(--color-secondary-accent-alpha);
 			}
