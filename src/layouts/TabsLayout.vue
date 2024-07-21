@@ -11,11 +11,6 @@ const tabs = [
 		route: '/',
 	},
 	{
-		icon: 'icon-park-outline:bookshelf',
-		text: 'Estantes',
-		route: '/shelves',
-	},
-	{
 		icon: 'mdi:book-search-outline',
 		text: 'Buscar',
 		route: '/search',
@@ -41,14 +36,13 @@ const tabs = [
 			:color="ButtonColor.GRAYSCALE"
 		>
 			<BaseIcon :icon="tab.icon" :size="IconSize.L" />
-			<span>{{ tab.text }}</span>
 		</BaseButton>
 	</nav>
 </template>
 
 <style>
 :root {
-	--tab-height: 64px;
+	--tab-height: 42px;
 }
 
 ::view-transition-group(tabs) {
@@ -60,15 +54,17 @@ const tabs = [
 nav {
 	z-index: 100;
 	position: fixed;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	height: var(--tab-height);
+	bottom: 16px;
+	align-self: center;
+	padding: 0 16px;
+	border-radius: 80px;
+	height: calc(var(--tab-height) + 16px);
 	background: var(--color-secondary-alpha);
 	backdrop-filter: blur(4px);
 	box-shadow: 0 -8px 8px -4px rgba(0, 0, 0, 0.2);
 	display: flex;
 	align-items: center;
+	gap: 16px;
 
 	a {
 		flex: 1;

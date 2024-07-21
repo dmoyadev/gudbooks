@@ -339,8 +339,16 @@ div {
 				padding: 12px;
 				font-size: var(--font-size-body);
 
-				&::placeholder {
-					color: transparent;
+				&:has( ~ .label) {
+					&::placeholder {
+						color: transparent;
+					}
+				}
+
+				&:not(:has( ~ .label)) {
+					&::placeholder {
+						color: var(--color-secondary-accent-alpha);
+					}
 				}
 			}
 

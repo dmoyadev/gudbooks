@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { capitalizeAll } from '../../../utils/helpers.ts';
+import { capitalizeAll } from '@/utils/helpers.ts';
 import type { Volume } from '@/modules/volumes/models/Volume.ts';
 import type { CoverSize } from '@/modules/volumes/helpers.ts';
 import { getCover } from '@/modules/volumes/helpers.ts';

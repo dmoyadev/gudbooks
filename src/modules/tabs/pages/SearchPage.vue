@@ -43,8 +43,6 @@ async function search() {
 	searching.value = false;
 }
 
-const isFiltersModalOpen = ref(false);
-
 const applyViewTransitionName = ref(false);
 const router = useRouter();
 function openBook(book: Volume) {
@@ -73,16 +71,11 @@ onMounted(async () => {
 			<BaseInput
 				v-model="searchQuery"
 				:form="InputForm.NOTCHED_RIGHT"
-			>
-				Buscar libros...
-			</BaseInput>
+				placeholder="Buscar libros..."
+			/>
 
-			<BaseButton
-				type="button"
-				:button-form="ButtonForm.CIRCLE"
-				@click="isFiltersModalOpen = true"
-			>
-				<BaseIcon icon="eva:options-outline" />
+			<BaseButton :button-form="ButtonForm.CIRCLE">
+				<BaseIcon icon="mdi:search" />
 			</BaseButton>
 		</form>
 
