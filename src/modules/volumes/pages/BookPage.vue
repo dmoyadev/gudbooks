@@ -44,22 +44,14 @@ const bookPages = computed<string>(() => {
 
 const bookPublishDate = computed<string>(() => {
 	if (!book.value) {
-		return 'No hay información';
+		return '???';
 	}
 
 	if (book.value.volumeInfo.publishedDate) {
 		return `Publicado en ${(new Date(book.value.volumeInfo.publishedDate)).getFullYear()}`;
 	}
 
-	return 'No hay información';
-});
-
-const bookLanguage = computed<string>(() => {
-	if (!book.value) {
-		return 'No hay información';
-	}
-
-	return book.value.volumeInfo.language || 'No hay información';
+	return '???';
 });
 
 const bookTitle = computed<string>(() => capitalizeAll(book.value?.volumeInfo.title || ''));
@@ -133,8 +125,8 @@ onBeforeRouteLeave(() => {
 						</div>
 
 						<div class="info-block">
-							<BaseIcon icon="pepicons-print:internet" :size="IconSize.XL" />
-							{{ bookLanguage }}
+							<BaseIcon icon="pepicons-print:star-filled" :size="IconSize.XL" />
+							{{ book!.volumeInfo.averageRating || '??' }}
 						</div>
 					</aside>
 				</section>
@@ -151,9 +143,13 @@ onBeforeRouteLeave(() => {
 						{{ bookISBN }}
 					</div>
 
-					<div class="tags">
+					<div
+						v-if="book?.volumeInfo.categories?.length"
+						class="tags"
+					>
 						<div
 							v-for="category in book?.volumeInfo.categories || []"
+							:key="category"
 							class="tag"
 						>
 							<span>{{ category }}</span>
@@ -189,7 +185,7 @@ main {
 	padding: 0 16px 16px;
 	display: flex;
 	flex-direction: column;
-	gap: 24px;
+	gap: 8px;
 
 	.title {
 		h1 {
@@ -204,6 +200,7 @@ main {
 	.book-info {
 		display: flex;
 		gap: 16px;
+		margin-bottom: 16px;
 
 		.book {
 			flex-shrink: 0;
@@ -214,12 +211,11 @@ main {
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
-			gap: 4px;
+			gap: 2px;
 
 			.info-block {
-				height: 100px;
+				flex: 1;
 				padding: 8px;
-				border-radius: 16px;
 				background: var(--color-primary-alpha);
 				color: var(--color-primary);
 				display: flex;
@@ -230,6 +226,16 @@ main {
 				gap: 8px;
 				font-size: var(--font-size-legal);
 				text-transform: uppercase;
+
+				&:first-child {
+					border-top-left-radius: 8px;
+					border-top-right-radius: 8px;
+				}
+
+				&:last-child {
+					border-bottom-left-radius: 8px;
+					border-bottom-right-radius: 8px;
+				}
 			}
 		}
 	}
@@ -238,6 +244,7 @@ main {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		margin-bottom: 16px;
 
 		.isbn {
 			display: flex;
