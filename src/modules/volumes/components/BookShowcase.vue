@@ -82,6 +82,7 @@ function handleTouchMove(e: TouchEvent) {
 
 <template>
 	<article
+		:id="`book-${book.id}`"
 		ref="$book"
 		:style="{
 			'--book-height': `${height}px`,
@@ -160,8 +161,7 @@ article {
 	--book-depth: 40px;
 	--book-color: rgb(0, 0, 0, 1);
 
-	min-height: var(--book-height);
-	height: var(--book-height);
+	aspect-ratio: 1 / 1.55;
 	width: var(--book-width);
 	position: relative;
 	transform-style: preserve-3d;
@@ -173,8 +173,7 @@ article {
 	.spine,
 	.pages {
 		position: absolute;
-		height: var(--book-height);
-		max-height: var(--book-height);
+		aspect-ratio: 1 / 1.55;
 		width: 100%;
 		background: var(--book-color);
 		box-shadow: 0 0 10px rgba(0, 0, 0, 1);

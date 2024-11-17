@@ -74,7 +74,7 @@ nav {
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
-		font-weight: var(--font-weight-medium);
+		font-weight: var(--font-weight-regular);
 
 		&.router-link-exact-active {
 			color: var(--color-primary) !important;

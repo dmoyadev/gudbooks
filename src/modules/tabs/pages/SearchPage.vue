@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import BaseInput from '@/components/input/BaseInput.vue';
 import type { Volume } from '@/modules/volumes/models/Volume.ts';
@@ -7,41 +7,62 @@ import { SearchQueryOptions, useGoogleBooksAPI } from '@/modules/app/composables
 import BaseButton from '@/components/button/BaseButton.vue';
 import BaseIcon from '@/components/icon/BaseIcon.vue';
 import { InputForm } from '@/components/input/BaseInput.types.ts';
-import { ButtonForm } from '@/components/button/BaseButton.types.ts';
-import BookShowcase from '@/modules/volumes/components/BookShowcase.vue';
+import { ButtonColor, ButtonForm, ButtonMode } from '@/components/button/BaseButton.types.ts';
 import { useVolumeStore } from '@/modules/volumes/composables/useVolumeStore.ts';
+import SearchResult from '@/modules/tabs/components/SearchResult.vue';
 
 const {
 	searchQuery,
 	searchResults,
 	currentVolume,
 	searchScrollOffset,
+	searchStartIndex,
+	searchTotal,
+	searchType,
 } = useVolumeStore();
 
-const searched = ref(false);
+const searched = ref(searchResults.value.length ? searchQuery.value : '');
 const searching = ref(false);
 const error = ref();
-async function search() {
+async function search(resetSearch = false) {
 	searchScrollOffset.value = 0;
+	if (resetSearch || searchQuery.value !== searched.value) {
+		searchResults.value = [];
+		searchTotal.value = 0;
+		searchStartIndex.value = 0;
+	} else {
+		searchStartIndex.value += 12;
+	}
+
 	if (!searchQuery.value) {
+		searched.value = '';
 		return;
 	}
 
-	searched.value = true;
+	searched.value = searchQuery.value;
 	searching.value = true;
 	try {
-		searchResults.value = await useGoogleBooksAPI().searchBooks({
-			q: {
-				options: {
-					[SearchQueryOptions.TITLE]: searchQuery.value,
-				},
-			},
+		const query = {} as { text?: string; options?: { [key in SearchQueryOptions]?: string } };
+		if (searchType.value === 'both') {
+			query.text = searchQuery.value;
+		} else if (searchType.value === 'title') {
+			query.options = { [SearchQueryOptions.TITLE]: searchQuery.value };
+		} else if (searchType.value === 'author') {
+			query.options = { [SearchQueryOptions.AUTHOR]: searchQuery.value };
+		}
+
+		const { items, total } = await useGoogleBooksAPI().searchBooks({
+			q: query,
+			...(searchStartIndex.value > 0 && { startIndex: searchStartIndex.value - 1 }),
 		});
+		searchResults.value.push(...items);
+		searchTotal.value = total;
 	} catch (e) {
 		error.value = e;
 	}
 	searching.value = false;
 }
+watch(searchType, () => search(true));
 
 const applyViewTransitionName = ref(false);
 const router = useRouter();
@@ -63,126 +84,174 @@ onMounted(async () => {
 	const $app = document.querySelector('#app') as HTMLElement;
 	$app.scroll({ top: searchScrollOffset.value });
 });
+
+function shouldApplyViewTransitionName(book: Volume) {
+	/*
+		There is an error with Google Books API that returns same books when paginating, so we must
+		patch this behaviour to don't duplicate view-transition-name properties in the page
+	 */
+	const count = searchResults.value.filter(b => b.id === book.id).length;
+	return count > 1 ? false : applyViewTransitionName.value;
+}
 </script>
 
 <template>
-	<main>
-		<form @submit.prevent="search()">
-			<BaseInput
-				v-model="searchQuery"
-				:form="InputForm.NOTCHED_RIGHT"
-				placeholder="Buscar libros..."
-			/>
+	<form @submit.prevent="search()">
+		<BaseInput
+			v-model="searchQuery"
+			:form="InputForm.NOTCHED_RIGHT"
+			placeholder="Buscar libros..."
+		/>
 
-			<BaseButton :button-form="ButtonForm.CIRCLE">
-				<BaseIcon icon="mdi:search" />
-			</BaseButton>
-		</form>
+		<BaseButton :button-form="ButtonForm.CIRCLE">
+			<BaseIcon icon="mdi:search" />
+		</BaseButton>
+	</form>
+
+	<main>
+		<div class="search-tabs">
+			<div
+				:class="{ active: searchType === 'title' }"
+				@click="searchType = 'title'"
+			>
+				Solo título
+			</div>
+
+			<div
+				:class="{ active: searchType === 'both' }"
+				@click="searchType = 'both'"
+			>
+				Título y autor
+			</div>
+
+			<div
+				:class="{ active: searchType === 'author' }"
+				@click="searchType = 'author'"
+			>
+				Solo autor
+			</div>
+		</div>
 
 		<!-- ❌ Error state -->
 		<section v-if="error">
 			<p>Error al buscar libros</p>
 		</section>
 
-		<!-- ✅ No error state -->
 		<template v-else>
-			<!-- ⏳ Loading state -->
-			<section v-if="searching">
-				<p>Cargando...</p>
+			<!-- ⚠️ No data state -->
+			<section v-if="!searched || !searchQuery">
+				<p v-if="searchType === 'both'">
+					Escribe el título de algún libro o el nombre de algún autor para buscar sus libros
+				</p>
+				<p v-if="searchType === 'author'">
+					Escribe el nombre de algún autor para buscar sus libros
+				</p>
+				<p v-if="searchType === 'title'">
+					Escribe el título de algún libro para buscarlo
+				</p>
 			</section>
 
-			<!-- ⚠️ No data state -->
-			<template v-else-if="!searchResults.length">
-				<!-- 🔍 No search query -->
-				<section v-if="!searchQuery">
-					<p>Escribe el título de algún libro para buscarlo</p>
-				</section>
-
+			<template v-else>
 				<!-- 📭 Empty state -->
-				<section v-else-if="searched">
+				<section v-if="!searching && !searchResults.length">
 					<p>No se encontraron resultados</p>
 				</section>
-			</template>
 
-			<!-- ✅ Data state -->
-			<section v-else>
-				<div
-					v-for="book in searchResults"
-					:key="book.id"
-					class="book-container"
-				>
-					<BookShowcase
-						:style="{ '--view-transition-name': applyViewTransitionName ? `book-${book.id}` : 'none' }"
+				<!-- ✅ Data state -->
+				<section v-else-if="searchResults.length">
+					<SearchResult
+						v-for="book in searchResults"
+						:key="book.id"
 						:book
-						width="100%"
-						class="book"
+						:apply-view-transition-name="shouldApplyViewTransitionName(book)"
 						@click="openBook(book)"
 					/>
+				</section>
 
-					<span class="title">
-						{{ book.volumeInfo.title || '???' }}
-					</span>
+				<!-- ⏳ Loading state -->
+				<section v-if="searching">
+					<SearchResult
+						v-for="i in 9"
+						:key="i"
+						loading
+					/>
+				</section>
 
-					<span class="author">
-						{{ book.volumeInfo.authors?.join(' • ') || '???' }}
-					</span>
-				</div>
-			</section>
+				<!-- 🔄 Load more state -->
+				<section>
+					<BaseButton
+						v-if="searchResults.length && searchTotal > searchResults.length"
+						:color="ButtonColor.GRAYSCALE"
+						:mode="ButtonMode.OUTLINE"
+						:loading="searching"
+						@click="search()"
+					>
+						Cargar más resultados
+					</BaseButton>
+				</section>
+			</template>
 		</template>
 	</main>
 </template>
 
 <style scoped lang="scss">
+form {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: var(--color-secondary-alpha);
+	backdrop-filter: blur(4px);
+	padding: 16px;
+}
+
 main {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 16px;
 	margin-bottom: var(--tab-height);
 
-	form {
-		position: sticky;
-		top: 0;
-		z-index: 1;
+	.search-tabs {
 		display: flex;
+		justify-content: center;
 		align-items: center;
-		gap: 8px;
-		background: var(--color-secondary-alpha);
-		backdrop-filter: blur(4px);
-		padding: 16px;
+		background: var(--color-secondary-accent-dark-alpha);
+		margin: 0 auto;
+		padding: 4px;
+		border-radius: 4px;
+
+		div {
+			flex: 1;
+			text-align: center;
+			white-space: nowrap;
+			font-size: var(--font-size-small);
+			cursor: pointer;
+			padding: 8px 16px;
+			border-radius: 50px;
+
+			&.active {
+				background: var(--color-primary);
+				color: var(--color-primary-accent);
+			}
+		}
+
 	}
 
 	section {
-		padding: 0 16px calc(var(--tab-height) + 16px);
+		padding: 0 16px;
 		display: flex;
 		justify-content: space-around;
 		flex-wrap: wrap;
 		gap: 32px 16px;
 
-		.book-container {
-			width: calc(33% - 10px);
-			display: flex;
-			flex-direction: column;
-			gap: 4px;
+		p {
+			text-align: center;
+		}
 
-			.book {
-				view-transition-name: var(--view-transition-name);
-			}
-
-			.title {
-				font-size: var(--font-size-legal);
-				overflow: hidden;
-				text-overflow: ellipsis;
-				white-space: initial;
-				display: -webkit-box;
-				-webkit-line-clamp: 2;
-				line-clamp: 2;
-				-webkit-box-orient: vertical;
-			}
-
-			.author {
-				font-size: 10px;
-				color: var(--color-secondary-accent-alpha);
-			}
+		&:last-child {
+			padding-bottom: calc(var(--tab-height) + 16px);
 		}
 	}
 }

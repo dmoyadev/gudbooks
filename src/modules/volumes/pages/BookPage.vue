@@ -126,7 +126,7 @@ onBeforeRouteLeave(() => {
 
 						<div class="info-block">
 							<BaseIcon icon="pepicons-print:star-filled" :size="IconSize.XL" />
-							{{ book!.volumeInfo.averageRating || '??' }}
+							{{ book?.volumeInfo?.averageRating ? Number(book.volumeInfo.averageRating).toFixed(2) : '??' }}
 						</div>
 					</aside>
 				</section>

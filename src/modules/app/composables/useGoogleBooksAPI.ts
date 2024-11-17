@@ -40,13 +40,13 @@ export function useGoogleBooksAPI() {
 			}) as Promise<T>;
 	}
 
-	async function searchBooks(searchOptions: GoogleBooksSearchOptions): Promise<Volume[]> {
+	async function searchBooks(searchOptions: GoogleBooksSearchOptions): Promise<{ items: Volume[]; total: number }> {
 		if (!searchOptions.q) {
 			throw new Error('Search query is required');
 		}
 
 		if (!searchOptions.maxResults) {
-			searchOptions.maxResults = 25;
+			searchOptions.maxResults = 12;
 		}
 
 		let query = searchOptions.q.text
@@ -71,10 +71,16 @@ export function useGoogleBooksAPI() {
 		return doCall<VolumesSearch>(`/volumes?q=${query}${searchParams}`)
 			.then((res: VolumesSearch) => {
 				if (res.totalItems) {
-					return res.items;
+					return {
+						items: res.items,
+						total: res.totalItems,
+					};
 				}
 
-				return [];
+				return {
+					items: [],
+					total: res.totalItems,
+				};
 			});
 	}
 
